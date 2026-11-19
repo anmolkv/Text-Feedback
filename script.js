@@ -542,7 +542,7 @@ function renderFeedback(text, t, g){
 
   const marks = [...ctx.errors.map((e,i)=>({...e, n:i+1})), ...ctx.tips.map(e=>({...e, n:null}))].sort((a,b)=>a.start-b.start);
   h += `<div class="section"><h3>Your answer</h3><div class="answer-view">${highlight(text, marks)}</div>
-        <div class="sub" style="margin-top:6px">Red = grammar or word choice · Yellow = spelling, punctuation or capital letters · Dotted = style tip. Hover over a highlight to see the fix.</div></div>`;
+        <div class="sub" style="margin-top:6px">Red = grammar or word choice · Yellow = spelling, punctuation or capital letters · Dotted = style tip. Tap a highlight to see the mistake and the fix.</div></div>`;
 
   if (ctx.errors.length){
     h += `<div class="section"><h3>Fix these (${ctx.errors.length})</h3>${ctx.errors.slice(0,12).map((e,i)=>`
@@ -599,7 +599,7 @@ function highlight(text, marks){
     const cls = m.n === null ? "" : isSerious(m) ? "serious" : "";
     const style = m.n === null ? ` style="background:none;border-bottom:2px dotted var(--teal)"` : "";
     const tip = (m.fix && m.fix.length ? "→ " + m.fix[0] + ". " : "") + (m.why || "");
-    html += `<mark class="${cls}"${style} title="${esc(tip)}">${esc(text.slice(m.start, m.end))}${m.n?`<sup>${m.n}</sup>`:""}</mark>`;
+    html += `<mark class="${cls}"${style} data-pop="mark" data-type="${esc(m.type||"")}" data-fix="${esc(m.fix && m.fix.length ? m.fix[0] : "")}" data-why="${esc(m.why||"")}" data-word="${esc(text.slice(m.start, m.end))}" tabindex="0">${esc(text.slice(m.start, m.end))}${m.n?`<sup>${m.n}</sup>`:""}</mark>`;
     pos = m.end;
   });
   return html + esc(text.slice(pos));
@@ -706,4 +706,56 @@ renderTabs(); renderPrompt(); updateCount(); coachLocal();
   document.addEventListener("click", e => { if (rail.classList.contains("open") && !rail.contains(e.target)) close(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
   if (matchMedia("(hover:hover)").matches){ rail.addEventListener("mouseenter", open); rail.addEventListener("mouseleave", close); }
+})();
+
+
+/* ---------- Tap a marked word: small pop-out explaining that mistake ---------- */
+(function(){
+  const pop = document.createElement("div");
+  pop.className = "word-pop"; pop.setAttribute("role","dialog"); pop.setAttribute("aria-live","polite");
+  document.body.appendChild(pop);
+  let cur = null;
+  const KIND = {err:"Error", minor:"Minor error", skip:"Skipped", unread:"Not read", tip:"Pronunciation tip",
+                ins:"Added word", note:"Repeat or filler", ok:"Self-corrected"};
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  function content(el){
+    const d = el.dataset, word = esc(d.word || "");
+    if (d.pop === "read"){
+      let items = []; try { items = JSON.parse(d.items || "[]"); } catch(e){}
+      const kind = d.kind || "err";
+      const head = `<div class="wp-kind k-${kind}">${KIND[kind] || cap(kind)}</div>`;
+      const main = kind === "ins" || kind === "note" || kind === "ok"
+        ? `<div class="wp-main">You added <b>“${word}”</b></div>`
+        : `<div class="wp-main">Passage word: <b>“${word}”</b></div>`;
+      const rows = items.map(x => `<div class="wp-row">${esc(cap(x.t))}${x.s ? ` · you said <s>“${esc(x.s)}”</s>` : ""}</div>`).join("");
+      return head + main + rows;
+    }
+    const serious = el.classList.contains("serious");
+    const type = d.type || "tip";
+    const head = `<div class="wp-kind ${serious ? "k-err" : type === "tip" ? "k-tip" : "k-minor"}">${esc(cap(type))}</div>`;
+    const main = d.fix ? `<div class="wp-main"><s>${word}</s> → <b class="fix">${esc(d.fix)}</b></div>` : `<div class="wp-main"><b>“${word}”</b></div>`;
+    return head + main + (d.why ? `<div class="wp-row">${esc(d.why)}</div>` : "");
+  }
+  function show(el){
+    cur = el; pop.innerHTML = content(el); pop.classList.add("show");
+    const r = el.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight, m = 10;
+    let left = Math.min(Math.max(m, r.left + r.width/2 - pw/2), innerWidth - pw - m);
+    let top = r.bottom + 10, below = true;
+    if (top + ph > innerHeight - m){ top = r.top - ph - 10; below = false; }
+    pop.style.left = left + "px"; pop.style.top = Math.max(m, top) + "px";
+    pop.style.setProperty("--ax", (r.left + r.width/2 - left) + "px");
+    pop.classList.toggle("above", !below);
+  }
+  const hide = () => { cur = null; pop.classList.remove("show"); };
+  document.addEventListener("click", e => {
+    const el = e.target.closest("[data-pop]");
+    if (el){ if (el === cur) hide(); else show(el); return; }
+    if (!e.target.closest(".word-pop")) hide();
+  });
+  document.addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-pop]")){ e.preventDefault(); show(e.target); }
+    if (e.key === "Escape") hide();
+  });
+  document.addEventListener("scroll", hide, true);
+  addEventListener("resize", hide);
 })();
