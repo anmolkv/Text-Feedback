@@ -363,14 +363,28 @@ const tabHTML = (k, label, meta, active, best) =>
   `<em class="badge ${best?'done':''}">${best ? "Done · best " + esc(best) : "New"}</em></span></button>`;
 function renderDone(id, prefix, total){
   const n = Object.keys(RESULTS).filter(k => k.startsWith(prefix)).length, el = $(id); if (!el) return;
-  el.querySelector("em").textContent = `${n} of ${total} done`;
+  el.querySelector("em").textContent = `${n}/${total}`;
   el.querySelector("i").style.width = (total ? n/total*100 : 0) + "%";
+  el.style.setProperty("--p", total ? n/total : 0);
+  el.title = `${n} of ${total} tasks done`;
+}
+const T_COLORS = {summary:"#ff6a3d", opinion:"#3ee08f", email:"#f2e94e", reply:"#6f9bff", intro:"#c48bff", custom:"#ff8fc7"};
+let wPrev = null;
+function wTabHTML(k, t, active){
+  const best = RESULTS["w:"+k], [x,y] = best ? best.split("/").map(Number) : [0,1];
+  const p = best ? x/y : 0, pct = Math.round(p*100);
+  return `<button class="tab ${active?"active":""} ${!active && k===wPrev ? "was" : ""}" data-k="${k}" style="--c:${T_COLORS[k]||"#6f9bff"};--p:${p}" title="${best ? "Best score " + esc(best) : (t.custom ? "Your own task" : `${t.min}–${t.max} words`)}">` +
+    `<span class="tab-ico"><i class="ico"></i></span>` +
+    `<span class="tab-txt"><b>${esc(t.label)}</b><small>${esc(t.custom ? "Your own task" : `${t.min}–${t.max} words`)}</small></span>` +
+    `<em class="pct ${best?"on":""}">${best ? pct + "%" : "New"}</em></button>`;
 }
 function renderTabs(){
-  $("tabs").innerHTML = Object.entries(TASKS).map(([k,t]) => tabHTML(k, t.label, t.custom ? "Your own task" : `${t.min}–${t.max} words`, k===current, RESULTS["w:"+k])).join("");
+  $("writeView").style.setProperty("--c", T_COLORS[current] || "#6f9bff");
+  $("tabs").innerHTML = Object.entries(TASKS).map(([k,t]) => wTabHTML(k, t, k===current)).join("");
   renderDone("wDone", "w:", Object.keys(TASKS).length);
   $("tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => {
-    drafts[current] = $("answer").value; current = b.dataset.k;
+    if (b.dataset.k === current) return;
+    wPrev = current; drafts[current] = $("answer").value; current = b.dataset.k;
     renderTabs(); renderPrompt(); $("answer").value = drafts[current] || ""; updateCount(); coachLocal(); scheduleLT();
     $("out").innerHTML = `<div class="empty">Your feedback will appear here.</div>`;
   });
@@ -378,7 +392,7 @@ function renderTabs(){
 function renderPrompt(){
   const t = TASKS[current]; $("wTitle").textContent = t.label;
   if (t.custom){
-    $("promptBox").innerHTML = `<div class="prompt custom"><div class="label">Your own task</div>
+    $("promptBox").innerHTML = `<div class="q-card prompt custom"><div class="card-top"><span class="tag">Your own task</span></div>
       <label style="font-size:13px">Question / instructions for the learner<textarea id="customPrompt" placeholder="e.g. Write a short note to your hostel warden asking for permission to come back late on Friday.">${esc(t.prompt)}</textarea></label>
       <label style="font-size:13px">Key words a good answer should use (comma-separated)<input id="cKw" value="${esc(t.keywords)}" placeholder="e.g. permission, Friday, late, reason"></label>
       <div style="display:flex;gap:8px"><label style="font-size:13px;flex:1">Min words <input id="cMin" type="number" value="${t.min}"></label>
@@ -389,8 +403,8 @@ function renderPrompt(){
     $("cMax").oninput = e => { t.max = +e.target.value||0; updateCount(); };
     $("sampleBtn").style.display = "none"; buildCustomPoints();
   } else {
-    $("promptBox").innerHTML = `<div class="prompt"><div class="label">Task · ${t.min}–${t.max} words</div>${esc(t.prompt).replace(/\n/g,"<br>")}</div>
-      ${t.passage ? `<div class="passage"><b>Passage</b>${esc(t.passage)}</div>` : ""}`;
+    $("promptBox").innerHTML = `<div class="q-card w-task"><div class="card-top"><span class="tag">Your task</span><span class="meta">Write ${t.min}–${t.max} words</span></div><div class="w-text">${esc(t.prompt).replace(/\n/g,"<br>")}</div></div>
+      ${t.passage ? `<div class="passage-card"><div class="card-top"><span class="tag">Passage</span><span class="meta">${words(t.passage)} words</span></div><div class="passage-text">${esc(t.passage)}</div></div>` : ""}`;
     $("sampleBtn").style.display = "";
   }
   $("rubricInfo").innerHTML = "<b>Rubric:</b> " + t.criteria.map(c => `<b>${esc(c[0])}</b>`).join(" · ") +
@@ -626,3 +640,57 @@ $("settingsSheet").addEventListener("click", e => { if (e.target.id === "setting
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("settingsSheet").hidden) closeSheet(); });
 
 renderTabs(); renderPrompt(); updateCount(); coachLocal();
+
+
+/* ---------- Feedback pop-up: opens once there is feedback ---------- */
+(function(){
+  const view = $("writeView"), out = $("out"), modal = $("fbModal");
+  const isEmpty = () => out.children.length === 1 && out.firstElementChild.classList.contains("empty") && !out.querySelector(".spinner");
+  let had = false;
+  const open = () => {
+    $("fbTitle").textContent = TASKS[current].label;
+    const keys = Object.keys(TASKS), i = keys.indexOf(current);
+    $("fbNext").textContent = i < keys.length - 1 ? `Next: ${TASKS[keys[i+1]].label} →` : "Back to the first task →";
+    view.classList.add("fb-on"); modal.classList.add("show"); modal.setAttribute("aria-hidden","false");
+    setTimeout(() => $("fbClose").focus({preventScroll:true}), 60);
+  };
+  const close = () => { view.classList.remove("fb-on"); modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); };
+  function sync(){
+    const has = !isEmpty();
+    view.classList.toggle("has-fb", has);
+    if (has && !had) open();
+    if (!has) close();
+    had = has;
+  }
+  new MutationObserver(sync).observe(out, {childList:true});
+  $("fbClose").onclick = close;
+  $("fbOpen").onclick = open;
+  const retry = () => { close(); setTimeout(() => $("answer").focus(), 200); };
+  $("fbRetry").onclick = retry;
+  out.addEventListener("click", e => { if (e.target.closest("#retryBtn")) retry(); });
+  $("fbNext").onclick = () => {
+    const keys = Object.keys(TASKS), next = keys[(keys.indexOf(current) + 1) % keys.length];
+    close(); document.querySelector(`#tabs .tab[data-k="${next}"]`)?.click();
+  };
+  modal.addEventListener("click", e => { if (e.target === modal) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && modal.classList.contains("show") && $("settingsSheet").hidden) close(); });
+  sync();
+})();
+
+/* ---------- Phone: task rail opens on tap / hover ---------- */
+(function(){
+  const rail = document.querySelector(".sidebar"), tb = document.querySelector(".toolbar");
+  if (!rail || !tb) return;
+  const phone = () => innerWidth < 900;
+  const setH = () => document.documentElement.style.setProperty("--tb-h", tb.offsetHeight + "px");
+  const open = () => { if (phone()) rail.classList.add("open"); };
+  const close = () => rail.classList.remove("open");
+  setH(); addEventListener("resize", () => { setH(); if (!phone()) close(); });
+  rail.addEventListener("click", e => {
+    if (phone() && !rail.classList.contains("open")){ e.preventDefault(); e.stopPropagation(); open(); }
+  }, true);
+  rail.addEventListener("click", e => { if (phone() && e.target.closest(".tab")) setTimeout(close, 280); });
+  document.addEventListener("click", e => { if (rail.classList.contains("open") && !rail.contains(e.target)) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  if (matchMedia("(hover:hover)").matches){ rail.addEventListener("mouseenter", open); rail.addEventListener("mouseleave", close); }
+})();

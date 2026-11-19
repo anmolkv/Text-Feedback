@@ -64,7 +64,12 @@
     }
     const a = tabs.querySelector(".tab.active"); if (!a) return;
     if (instant) g.style.transition = "none";
-    g.style.width = a.offsetWidth + "px"; g.style.height = a.offsetHeight + "px";
+    // On wide screens the highlight is a "tab" that runs down to the bar's bottom edge and melts into the page below
+    const bar = tabs.closest(".sidebar"), merge = !!bar && innerWidth >= 900;
+    let h = a.offsetHeight;
+    if (merge) h = Math.round(bar.getBoundingClientRect().bottom - tabs.getBoundingClientRect().top - a.offsetTop) + 1;
+    g.classList.toggle("merge", merge);
+    g.style.width = a.offsetWidth + "px"; g.style.height = h + "px";
     g.style.transform = `translate(${a.offsetLeft}px,${a.offsetTop}px)`;
     g.classList.add("ready");
     if (instant) { void g.offsetWidth; g.style.transition = ""; }

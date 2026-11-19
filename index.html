@@ -19,30 +19,29 @@
 </div>
 
 <header class="toolbar">
+  <div class="tb-left"><div class="sb-prog" id="wDone"><span class="track"><i></i></span><em>0 of 6 done</em></div></div>
   <div class="brand">
     <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h9M4 12h6M4 17h9"/><path d="M17 8v8M20 10v4M14 10.5v3"/></svg></div>
     <h1>Feedback<small>Writing practice</small></h1>
   </div>
   <div class="tools">
+    <button class="icon-btn corner-btn" id="settingsBtn" type="button" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <div class="engine" id="engine" title="Grammar engine"><i></i><span>Grammar: not checked</span></div>
-    <button class="icon-btn" id="settingsBtn" type="button" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
 </header>
 
 <main id="writeView" class="app">
   <aside class="sidebar">
-    <div class="sb-head">Writing tasks</div>
-    <div class="sb-prog" id="wDone"><span class="track"><i></i></span><em>0 of 6 done</em></div>
+    <div class="bar-bg" aria-hidden="true"></div>
     <div class="tabs" id="tabs"></div>
-    <div class="sb-foot">Rule-based scoring with LanguageTool grammar checks. No AI model is used.</div>
   </aside>
 
   <section class="pane editor card">
-    <div class="pane-head"><div class="crumb">Communication skills · Writing</div><h2 id="wTitle">Summary</h2></div>
+    <div class="pane-head"><button class="fb-open" id="fbOpen" type="button">View feedback</button><div class="crumb">Communication skills · Writing</div><h2 id="wTitle">Summary</h2></div>
     <div class="pane-body">
       <div id="promptBox"></div>
       <div class="paper-card">
-        <div class="paper-label">Your answer</div>
+        <div class="card-top"><span class="tag">Your answer</span></div>
         <textarea id="answer" placeholder="Start writing…" spellcheck="false"></textarea>
         <div class="paper-foot">
           <div class="wmeter">
@@ -58,8 +57,9 @@
 
       <div class="coach">
         <div class="coach-head">
-          <div><b>Writing coach</b><span class="coach-status" id="coachStatus">Start writing, and hints will appear here.</span></div>
+          <span class="tag">Writing coach</span>
           <label class="switch"><input type="checkbox" id="autoCoach" checked> Live hints</label>
+          <span class="coach-status" id="coachStatus">Start writing, and hints will appear here.</span>
         </div>
         <div class="coach-body">
           <div class="cl" id="checklist"></div>
@@ -70,13 +70,22 @@
       <div class="rubric" id="rubricInfo"></div>
     </div>
   </section>
-
-  <section class="pane inspector card">
-    <div class="pane-head"><h2>Feedback</h2><p>Four criteria, each out of 4.</p></div>
-    <div class="pane-body"><div id="out"><div class="empty">Your feedback will appear here.<br>Write an answer, then choose Get feedback.</div></div></div>
-  </section>
 </main>
 
+<!-- Feedback: opens as a large pop-up after "Get feedback" -->
+<div class="fb-modal" id="fbModal" aria-hidden="true">
+  <section class="pane inspector card fb-dialog" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+    <div class="pane-head fb-head">
+      <div><div class="crumb">Your feedback</div><h2 id="fbTitle">Feedback</h2></div>
+      <div class="fb-actions">
+        <button class="ghost" id="fbRetry" type="button">Edit &amp; try again</button>
+        <button class="primary" id="fbNext" type="button">Next task →</button>
+        <button class="fb-close" id="fbClose" type="button" aria-label="Close feedback" title="Close (Esc)">×</button>
+      </div>
+    </div>
+    <div class="pane-body"><div id="out"><div class="empty">Your feedback will appear here.<br>Write an answer, then choose Get feedback.</div></div></div>
+  </section>
+</div>
 
 <div class="sheet-backdrop" id="settingsSheet" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -89,8 +98,7 @@
         <label class="form-row"><span>English variety</span><select id="ltLang"><option value="en-GB" selected>British English (closest to Indian English)</option><option value="en-US">American English</option></select></label>
       </div>
       <p class="note">Grammar is checked online. If it can't be reached, the tool uses basic offline checks.</p>
-
-          </div>
+    </div>
   </div>
 </div>
 

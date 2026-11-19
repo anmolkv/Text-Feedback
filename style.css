@@ -506,3 +506,702 @@ audio{width:100%;height:42px}
 #sTabs .tab[data-k=intro]{--ico:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%223%22%20width%3D%226%22%20height%3D%2211%22%20rx%3D%223%22/%3E%3Cpath%20d%3D%22M5.5%2011a6.5%206.5%200%200%200%2013%200M12%2017.5V21%22/%3E%3C/svg%3E")}
 #sTabs .tab[data-k=answer]{--ico:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%205h16v11H10l-5%204v-4H4z%22/%3E%3Cpath%20d%3D%22M10%208.6a2%202%200%201%201%202.6%201.9c-.4.2-.6.5-.6.9v.4M12%2013.6v.1%22/%3E%3C/svg%3E")}
 :root{--empty-ico:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203l1.9%204.6L18.5%209.5l-4.6%201.9L12%2016l-1.9-4.6L5.5%209.5l4.6-1.9z%22/%3E%3Cpath%20d%3D%22M19%2015l.8%202%202%20.8-2%20.8-.8%202-.8-2-2-.8%202-.8z%22/%3E%3C/svg%3E")}
+
+
+/* =========================================================
+   Speech layout: task bar on top, full-width reading area,
+   feedback panel slides in only once there is feedback
+   ========================================================= */
+.app{display:grid;grid-template-columns:minmax(0,1fr) 0px;grid-template-rows:auto minmax(0,1fr);transition:grid-template-columns .5s var(--ease)}
+.app.fb-on{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+.sidebar{grid-column:1 / -1;grid-row:1;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:24px;
+  padding:12px 22px;border-right:0;border-bottom:1px solid var(--line);overflow:visible;background:var(--bg);z-index:4}
+.sb-head{grid-column:1;grid-row:1;align-self:end;padding:0}
+.sb-prog{grid-column:1;grid-row:2;align-self:start;padding:6px 0 0}
+.sb-foot{display:none}
+.tabs{grid-column:2;grid-row:1 / span 2;flex-direction:row;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1 1 0;min-width:200px;width:auto;align-items:center;padding:10px 12px}
+.tab-ico{margin:0}
+.tab-txt{flex-direction:row;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:0}
+.tab-txt b{width:100%;white-space:nowrap}
+.tab-txt small{white-space:nowrap}
+.badge{margin-top:0;font-size:11px;padding:1px 7px}
+.pane.editor{grid-column:1;grid-row:2}
+.pane.editor .pane-body{max-width:none}
+.pane.inspector{grid-column:2;grid-row:2;min-width:0;visibility:hidden;opacity:0;transform:translateX(24px);transition:opacity .35s var(--ease),transform .5s var(--ease),visibility 0s .5s}
+.app.fb-on .pane.inspector{visibility:visible;opacity:1;transform:none;transition:opacity .35s .15s var(--ease),transform .5s var(--ease),visibility 0s}
+.pane.inspector .pane-head{position:relative}
+.fb-close{position:absolute;top:24px;right:18px;width:34px;height:34px;border-radius:50%;border:0;background:var(--soft);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:background .2s}
+.fb-close:hover{background:var(--fill3)}
+.pane.editor .pane-head{position:relative}
+.fb-open{display:none;position:fixed;top:186px;right:38px;z-index:7;box-shadow:0 10px 24px -10px rgba(0,0,0,.4);border:0;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:999px;cursor:pointer}
+.app.has-fb:not(.fb-on) .fb-open{display:block}
+
+@media (max-width:1180px){
+  .app.fb-on{grid-template-columns:minmax(0,1fr) minmax(320px,380px)}
+}
+@media (max-width:900px){
+  .app{display:block}
+  .sidebar{display:block;padding:14px 12px 8px;position:sticky;top:58px}
+  .sb-head,.sb-prog{display:none}
+  .tab{flex:none;min-width:0}
+  .tab-txt b{width:auto}
+  .pane.inspector{display:none}
+  .app.fb-on .pane.inspector{display:block;transform:none}
+  .fb-open{position:absolute;top:16px;right:16px}
+}
+
+
+/* =========================================================
+   NOTCH DESIGN
+   Black bars, ring progress icons, and round buttons that sit
+   in smooth curved cut-outs (shapes drawn by notch.js)
+   ========================================================= */
+
+/* ---- Sheet: the settings button nests in a notch cut from its top-right ---- */
+.app.notched{clip-path:var(--notch);border-radius:0}
+.toolbar .tools{padding-right:118px}
+#settingsBtn{position:absolute;right:67px;bottom:-14px;width:46px;height:46px;background:#fff;color:var(--ink);z-index:6;
+  box-shadow:0 10px 22px -10px rgba(0,0,0,.55)}
+#settingsBtn:hover{background:#fff;color:var(--accent)}
+#settingsBtn svg{width:20px;height:20px}
+
+/* ---- Task bar: black pill with ring icons ---- */
+.sidebar{padding:18px 22px 14px;column-gap:12px;border-bottom:0}
+.sb-head{display:none}
+.sb-prog{grid-column:1;grid-row:1 / span 2;align-self:center;width:66px;height:66px;padding:0;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(closest-side,var(--ink) calc(100% - 5px),transparent calc(100% - 4.5px)),conic-gradient(#fff calc(var(--p,0) * 1turn),#2d3038 0);
+  box-shadow:0 12px 26px -14px rgba(0,0,0,.6);transition:background .6s}
+.sb-prog .track{display:none}
+.sb-prog em{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.tabs{background:var(--ink);border-radius:999px;padding:8px;gap:4px;box-shadow:0 12px 26px -14px rgba(0,0,0,.6)}
+.tab{color:#fff;border-radius:999px;padding:8px 20px 8px 8px;gap:12px;min-width:210px}
+.tab:hover{background:rgba(255,255,255,.06)}
+.tabs .glider{background:rgba(255,255,255,.12);border-radius:999px}
+.sidebar:not(.has-glider) .tab.active{background:rgba(255,255,255,.12)}
+.tab-txt b{font-size:14.5px;color:#fff}
+.tab-txt small{font-size:12px;color:#8b909c}
+.tab-ico{width:48px;height:48px;box-shadow:none;
+  background:radial-gradient(closest-side,#15171c calc(100% - 4px),transparent calc(100% - 3.5px)),conic-gradient(var(--c) calc(var(--p,0) * 1turn),#2d3038 0)}
+.tab:hover .tab-ico{transform:rotate(-8deg) scale(1.05)}
+.tab-ico i.ico{background:#fff}
+.tab.active .tab-ico i.ico{background:var(--c)}
+.tab .pct{margin-left:auto;padding-left:6px;font-style:normal;font-size:12px;font-weight:600;color:#6c717d;white-space:nowrap}
+.tab .pct.on{font-size:16px;font-weight:800;color:var(--c);letter-spacing:-.02em}
+
+/* ---- Recorder: black dock, round record button in a notch ---- */
+.recorder{margin-top:44px;padding:16px 150px 16px 26px;grid-template-columns:auto minmax(0,1fr);background:transparent;box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;filter:drop-shadow(0 16px 22px rgba(16,24,40,.28));transition:filter .35s var(--ease)}
+.recorder::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:var(--r-lg);background:var(--ink)}
+.recorder.notched::before{border-radius:0;clip-path:var(--notch)}
+.recorder.live-on{box-shadow:none;filter:drop-shadow(0 0 1.5px var(--red-dot)) drop-shadow(0 16px 24px rgba(226,38,45,.35))}
+.recorder .rec-label{color:#8b909c}
+.recorder .timer{color:#fff}
+.recorder.live-on .timer{color:#ff4a52}
+.recorder .rec-action{position:absolute;right:48px;top:-26px;flex-direction:column;gap:9px;z-index:2}
+.recbtn{width:64px;height:64px;padding:0;border-radius:50%;justify-content:center;gap:0;box-shadow:0 12px 24px -8px rgba(226,38,45,.65)}
+.recbtn:hover{transform:translateY(-2px) scale(1.04)}
+.recbtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.recbtn i{width:64px;height:64px;background:transparent}
+.recbtn i::after{width:26px;height:26px}
+.recbtn.on{background:#fff;box-shadow:0 12px 24px -8px rgba(0,0,0,.5)}
+.recbtn.on i::after{background:var(--red-dot);width:20px;height:20px}
+.recorder .rec-key{background:#23262d;color:#8b909c;box-shadow:none}
+
+/* ---- Feedback panel buttons match ---- */
+.fb-close{background:var(--ink);color:#fff}
+.fb-close:hover{background:#262a31}
+
+@media (max-width:900px){
+  .toolbar .tools{padding-right:0}
+  #settingsBtn{position:static;width:36px;height:36px;background:#17191e;color:#c4c8d0;box-shadow:none}
+  .sidebar{padding:12px 12px 8px;background:var(--bg)}
+  .tabs{padding:6px}
+  .tab{min-width:0;padding:6px 14px 6px 6px}
+  .tab-ico{width:38px;height:38px}
+  .tab .pct{display:none}
+  .sb-prog{display:none}
+  .recorder{padding:12px 134px 12px 18px;grid-template-columns:auto minmax(0,1fr)}
+  .recorder .rec-action{right:50px;top:-22px}
+  .recbtn,.recbtn i{width:56px;height:56px}
+  .recbtn span{display:block}
+}
+
+
+/* =========================================================
+   LAYOUT & HIERARCHY PASS
+   - feedback opens as a large pop-up
+   - passage and question cards match the black/white UI
+   - one spacing scale: 8 / 16 / 24 / 40
+   ========================================================= */
+
+/* ---- Single column app (feedback lives in the pop-up) ---- */
+.app,.app.fb-on{grid-template-columns:minmax(0,1fr)}
+
+/* ---- Task bar: clear of the settings notch, roomier ---- */
+.sidebar{padding:40px 40px 8px;column-gap:16px}
+.tabs{padding:8px;gap:6px}
+
+/* ---- Editor: consistent rhythm ---- */
+.pane.editor .pane-head{padding:32px 40px 0}
+.pane.editor .pane-body{padding:24px 40px 56px}
+.pane.editor .pane-body > * + *{margin-top:24px}
+.pane.editor .pane-body > #recStatus:empty{display:none}
+.pane.editor .pane-body > .recorder{margin-top:56px}
+.pane-head .crumb{font-size:13px;font-weight:600;color:var(--tertiary);letter-spacing:.02em}
+.pane-head h2{font-size:30px}
+.steps{margin-top:14px;font-size:13px;gap:8px}
+.steps li::before{width:24px;height:24px;font-size:12px}
+.steps li:not(:first-child){padding-left:36px}
+.steps li:not(:first-child)::after{width:26px}
+
+/* ---- Shared card header: dark tag + quiet meta ---- */
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.card-top .tag,.coach-head .tag{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:7px 14px 7px 12px;border-radius:999px}
+.card-top .tag::before,.coach-head .tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c,#6f9bff)}
+.card-top .meta{font-size:13px;font-weight:600;color:var(--muted)}
+
+/* ---- Passage: clean white card, no notebook lines ---- */
+.passage-card{background:var(--card);border-radius:28px;padding:28px 40px 36px;box-shadow:0 1px 0 rgba(16,24,40,.04),0 18px 40px -24px rgba(16,24,40,.25)}
+.read-passage{--lh:1.75;margin:0;padding:0;background:none;box-shadow:none;border-radius:0;font-size:24px;line-height:1.75;font-weight:500;letter-spacing:-.012em;color:var(--ink)}
+.read-passage::before{display:none}
+.read-passage.tracking .w.next{background:color-mix(in srgb,var(--c,#6f9bff) 28%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--c,#6f9bff) 28%,transparent)}
+.hint{margin:0;font-size:14px;line-height:1.6;color:var(--muted);padding:0 4px}
+.hint b{color:var(--ink)}
+.hint kbd{font:600 11.5px var(--font);background:var(--card);border-radius:6px;padding:2px 7px;box-shadow:inset 0 -1px 0 var(--fill3),0 0 0 1px var(--line);color:var(--ink)}
+
+/* ---- Question card: the question is the hero ---- */
+.q-card{background:var(--card);border-radius:28px;padding:28px 40px 32px;box-shadow:0 1px 0 rgba(16,24,40,.04),0 18px 40px -24px rgba(16,24,40,.25)}
+.q-time::before{content:"⏱";margin-right:6px}
+.q-text{font-size:26px;line-height:1.4;font-weight:700;letter-spacing:-.022em;color:var(--ink);max-width:900px}
+.q-cover{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}
+.q-sub{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.q-points{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.q-points li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--soft-2);font-size:15px;font-weight:600;color:var(--ink)}
+.q-points .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--ink);color:#fff}
+
+/* ---- Live transcript: quiet until you speak ---- */
+.live{padding:16px 22px;border-radius:22px;font-size:16px;line-height:1.6}
+.live::before{content:"Live transcript";display:block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tertiary);margin-bottom:6px}
+.live:has(> .sub:only-child){background:transparent;box-shadow:inset 0 0 0 1.5px var(--fill3);border:0}
+.live:has(> .sub:only-child)::before{display:none}
+.live > .sub:only-child{color:var(--tertiary);font-size:14.5px}
+
+/* ---- Lower-priority things stay quiet ---- */
+.rubric{font-size:13px;margin-top:16px}
+#manualBox{box-shadow:none;background:transparent;border:1.5px dashed var(--fill3)}
+
+/* ---- "View feedback" pill once the pop-up has been closed ---- */
+.fb-open{position:absolute;top:32px;right:40px;z-index:3}
+
+/* ---- Feedback pop-up ---- */
+.fb-modal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:32px;background:rgba(8,9,12,.6);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .35s var(--ease),visibility 0s .35s}
+.fb-modal.show{opacity:1;visibility:visible;transition:opacity .35s var(--ease),visibility 0s}
+.fb-modal .fb-dialog{position:relative;width:min(1180px,100%);max-height:100%;height:100%;display:flex;flex-direction:column;background:var(--bg);border-radius:32px;overflow:auto;
+  border:0;visibility:inherit;opacity:1;transform:translateY(24px) scale(.98);transition:transform .5s var(--spring);box-shadow:0 40px 80px -20px rgba(0,0,0,.5)}
+.fb-modal.show .fb-dialog{transform:none}
+.fb-head{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px 32px !important;background:var(--bg);border-bottom:1px solid var(--line)}
+.fb-head h2{font-size:26px !important;margin:2px 0 0}
+.fb-actions{display:flex;align-items:center;gap:10px}
+.fb-actions button.primary,.fb-actions button.ghost{padding:10px 18px;font-size:14px}
+.fb-head .fb-close{position:static;width:42px;height:42px;font-size:22px}
+.fb-dialog .pane-body{padding:28px 32px 40px !important;max-width:none}
+
+/* two columns inside the pop-up: score on the left, details on the right */
+#sOut{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);column-gap:32px;align-items:start}
+#sOut > *{grid-column:2;margin-top:0;margin-bottom:20px}
+#sOut > .scorecard{grid-column:1;grid-row:1 / span 14;position:sticky;top:0}
+#sOut > .empty{grid-column:1 / -1}
+#sOut > .skeleton{grid-column:1 / -1}
+
+@media (max-width:900px){
+  .sidebar{padding:12px 12px 8px}
+  .pane.editor .pane-head{padding:16px 16px 0}
+  .pane.editor .pane-body{padding:16px 14px 28px}
+  .pane.editor .pane-body > * + *{margin-top:16px}
+  .passage-card,.q-card{padding:20px 20px 24px;border-radius:22px}
+  .read-passage{font-size:19px}
+  .q-text{font-size:21px}
+  .fb-open{top:14px;right:14px}
+  .fb-modal{padding:0}
+  .fb-modal .fb-dialog{display:flex;border-radius:0}
+  .fb-head{padding:14px 16px !important;flex-wrap:wrap}
+  .fb-actions{width:100%}
+  .fb-actions .primary{flex:1}
+  .fb-dialog .pane-body{padding:16px !important}
+  #sOut{display:block}
+  #sOut > .scorecard{position:static}
+}
+
+/* space between the passage card and the hint below it */
+#sPromptBox > * + *{margin-top:16px}
+
+
+/* =========================================================
+   ATTACHED TASK BAR
+   The task bar hangs from the black header (curved shoulders),
+   and the selected task's icon drops into a notch under it.
+   ========================================================= */
+.sidebar{position:relative;display:flex;align-items:center;gap:14px;margin:0 140px 0 64px;padding:12px 28px 16px 16px;background:transparent;border:0;border-radius:0}
+.bar-bg{position:absolute;inset:0;z-index:0;background:var(--frame);border-radius:0 0 40px 40px;transition:clip-path .55s var(--ease)}
+.bar-bg.notched{border-radius:0;clip-path:var(--notch)}
+/* curved shoulders joining the bar to the header */
+.sidebar::before,.sidebar::after{content:"";position:absolute;top:0;width:28px;height:28px;z-index:0;pointer-events:none}
+.sidebar::before{left:-28px;background:radial-gradient(circle at 0 100%,transparent 27.5px,var(--frame) 28px)}
+.sidebar::after{right:-28px;background:radial-gradient(circle at 100% 100%,transparent 27.5px,var(--frame) 28px)}
+.sidebar > .sb-prog,.sidebar > .tabs{position:relative;z-index:1}
+.sb-prog{width:60px;height:60px;box-shadow:none;flex:none;
+  background:radial-gradient(closest-side,var(--frame) calc(100% - 5px),transparent calc(100% - 4.5px)),conic-gradient(#fff calc(var(--p,0) * 1turn),#2a2d34 0)}
+.tabs{flex:1;background:transparent;box-shadow:none;padding:0;gap:4px;overflow:visible}
+.tabs .glider{opacity:0 !important}
+.tab,.tab.active,.tab.active:hover,.sidebar:not(.has-glider) .tab.active{background:transparent}
+.tab{padding:10px 16px 10px 10px;min-width:0}
+.tab:hover{background:rgba(255,255,255,.06)}
+.tab:not(.active) .tab-txt b{color:#c9ccd3}
+.tab-ico{transition:transform .55s var(--spring),background .3s,box-shadow .3s}
+/* selected: the icon becomes a white disc sitting in the notch below the bar */
+.tab.active .tab-ico,.tab.active:hover .tab-ico{transform:translateY(42px) scale(1.12);
+  background:radial-gradient(closest-side,#fff calc(100% - 4.5px),transparent calc(100% - 4px)),conic-gradient(var(--c) calc(var(--p,0) * 1turn),#2a2d34 0);
+  box-shadow:0 12px 22px -10px rgba(0,0,0,.55)}
+.tab.active .tab-ico i.ico{background:var(--ink)}
+.tab.active .tab-txt b{color:#fff}
+/* room for the dropped icon */
+.pane.editor .pane-head{padding-top:48px}
+.fb-open{top:48px}
+
+@media (max-width:1180px){
+  .sidebar{margin:0 132px 0 40px}
+  .tab-txt small{display:none}
+}
+@media (max-width:900px){
+  .sidebar{margin:0;padding:10px 12px 14px;position:sticky}
+  .sidebar::before,.sidebar::after{display:none}
+  .bar-bg{border-radius:0 0 26px 26px}
+  .tabs{overflow-x:auto}
+  .tab.active .tab-ico,.tab.active:hover .tab-ico{transform:none}
+  .pane.editor .pane-head{padding-top:18px}
+  .fb-open{top:14px}
+}
+
+/* ---- Header: no engine chips, title centred ---- */
+.toolbar .engine{display:none !important}
+.toolbar{grid-template-columns:1fr auto 1fr}
+.toolbar .brand{grid-column:2;justify-self:center}
+.toolbar .tools{grid-column:3;padding-right:0}
+@media (max-width:900px){
+  .toolbar{grid-template-columns:1fr auto 1fr;padding:10px 14px}
+  .toolbar .tools{grid-row:1}
+}
+
+/* fixes for the attached bar */
+.sidebar{flex-direction:row;flex-wrap:nowrap}
+.sidebar > .tabs{display:flex;flex-direction:row}
+.tab{overflow:visible}
+.tab .ripple{display:none}
+
+/* =========================================================
+   SLIM TASK BAR — the whole selected task (icon + name)
+   drops into a pill-shaped notch under the bar; progress
+   ring on the left, settings on the right
+   ========================================================= */
+.app.notched{clip-path:none;border-radius:var(--r-xl) var(--r-xl) 0 0}
+.sidebar{margin:0 64px;padding:8px 10px;gap:12px}
+.bar-bg{border-radius:0 0 30px 30px}
+.sb-prog{width:44px;height:44px;background:radial-gradient(closest-side,var(--frame) calc(100% - 4px),transparent calc(100% - 3.5px)),conic-gradient(#fff calc(var(--p,0) * 1turn),#2a2d34 0)}
+.sb-prog em{font-size:12.5px}
+.sidebar > .bar-settings{position:relative;z-index:1;flex:none;width:44px;height:44px;background:#1a1c21;color:#fff;box-shadow:inset 0 0 0 4px #2a2d34}
+.sidebar > .bar-settings:hover{background:#26292f;color:#fff}
+.sidebar > .bar-settings svg{width:19px;height:19px}
+.tabs{gap:6px;justify-content:space-between}
+.tab{flex:0 1 auto;height:44px;padding:5px 16px 5px 5px;gap:10px;border-radius:999px;align-items:center;
+  transition:transform .5s var(--spring),background .3s,box-shadow .3s}
+.tab-txt small{display:none}
+.tab-txt b{font-size:14px;width:auto}
+.tab-ico{width:34px;height:34px;margin:0}
+.tab-ico i.ico{width:15px;height:15px}
+.tab .pct{margin-left:4px;padding-left:0;font-size:11.5px}
+.tab .pct.on{font-size:13px}
+/* selected */
+.tab.active,.tab.active:hover{background:#fff;transform:translateY(26px);box-shadow:0 12px 24px -12px rgba(0,0,0,.45)}
+.tab.active .tab-ico,.tab.active:hover .tab-ico{transform:none;box-shadow:none;
+  background:radial-gradient(closest-side,var(--soft-2) calc(100% - 3.5px),transparent calc(100% - 3px)),conic-gradient(var(--c) calc(var(--p,0) * 1turn),var(--soft) 0)}
+.tab.active .tab-ico i.ico{background:var(--ink)}
+.tab.active .tab-txt b{color:var(--ink)}
+.tab.active .pct{color:var(--muted)}
+.tab.active .pct.on{color:color-mix(in srgb,var(--c) 70%,#000)}
+.pane.editor .pane-head{padding-top:44px}
+.fb-open{top:44px}
+@media (max-width:1180px){ .sidebar{margin:0 40px} }
+@media (max-width:900px){
+  .sidebar{margin:0;padding:8px 12px 10px}
+  .tab.active,.tab.active:hover{transform:none}
+  .pane.editor .pane-head{padding-top:18px}
+  .fb-open{top:14px}
+}
+#settingsBtn.bar-settings{position:relative;right:auto;bottom:auto;z-index:1;flex:none;width:44px;height:44px;background:#1a1c21;color:#fff;box-shadow:inset 0 0 0 4px #2a2d34}
+#settingsBtn.bar-settings:hover{background:#26292f}
+@media (max-width:900px){
+  .sidebar{gap:8px}
+  .sidebar > .tabs{overflow-x:auto;justify-content:flex-start;min-width:0}
+  .tab{flex:none;height:40px;padding:4px 14px 4px 4px}
+  .tab-ico{width:32px;height:32px}
+  .tab .pct{display:none}
+  #settingsBtn.bar-settings{width:40px;height:40px}
+}
+
+/* =========================================================
+   SELECTION: tasks stay in place; a white pill glides
+   from the old task to the new one
+   ========================================================= */
+.tab.active,.tab.active:hover{background:transparent;transform:none;box-shadow:none}
+.sidebar .tabs .glider{opacity:1 !important;background:#fff;border-radius:999px;box-shadow:0 8px 18px -10px rgba(0,0,0,.6);
+  transition:transform .6s cubic-bezier(.3,1.25,.45,1),width .6s cubic-bezier(.3,1.25,.45,1),height .3s var(--ease)}
+.sidebar .tabs .glider:not(.ready){opacity:0 !important}
+.tab-txt b,.tab .pct{transition:color .35s var(--ease)}
+.tab-ico i.ico{transition:background .35s var(--ease)}
+.tab.active .tab-ico,.tab.active:hover .tab-ico{transform:none}
+.pane.editor .pane-head{padding-top:32px}
+.fb-open{top:32px}
+@media (max-width:900px){ .pane.editor .pane-head{padding-top:18px} .fb-open{top:14px} }
+
+/* =========================================================
+   MERGED TAB SELECTION
+   The selected task is a light tab that runs down out of the
+   black bar and melts into the page with curved corners.
+   It slides smoothly from task to task.
+   ========================================================= */
+.sidebar{padding-bottom:10px}
+.sidebar .tabs .glider{background:var(--bg);border-radius:22px;box-shadow:none;
+  transition:transform .7s cubic-bezier(.65,0,.35,1),width .7s cubic-bezier(.65,0,.35,1),height .35s var(--ease)}
+.sidebar .tabs .glider.merge{border-radius:22px 22px 0 0}
+.sidebar .tabs .glider.merge::before,.sidebar .tabs .glider.merge::after{content:"";position:absolute;bottom:0;width:18px;height:18px;pointer-events:none}
+.sidebar .tabs .glider.merge::before{left:-18px;background:radial-gradient(circle at 0 0,transparent 17.5px,var(--bg) 18px)}
+.sidebar .tabs .glider.merge::after{right:-18px;background:radial-gradient(circle at 100% 0,transparent 17.5px,var(--bg) 18px)}
+.tab.active .tab-ico,.tab.active:hover .tab-ico{background:radial-gradient(closest-side,#fff calc(100% - 3.5px),transparent calc(100% - 3px)),conic-gradient(var(--c) calc(var(--p,0) * 1turn),#dfe2e7 0)}
+
+/* text and icon change colour as the highlight arrives / leaves */
+@keyframes tabTextIn{from{color:#c9ccd3}}
+@keyframes tabTextOut{from{color:var(--ink)}}
+@keyframes tabIcoIn{from{background:radial-gradient(closest-side,#15171c calc(100% - 4px),transparent calc(100% - 3.5px)),conic-gradient(var(--c) calc(var(--p,0) * 1turn),#2d3038 0)}}
+@keyframes tabGlyphIn{from{background:#fff}}
+.tab.active .tab-txt b{animation:tabTextIn .4s .35s both}
+.tab.active .tab-ico{animation:tabIcoIn .01s .4s both}
+.tab.active .tab-ico i.ico{animation:tabGlyphIn .01s .4s both}
+.tab.was .tab-txt b{animation:tabTextOut .35s .1s both}
+@media (prefers-reduced-motion:reduce){
+  .tab.active .tab-txt b,.tab.active .tab-ico,.tab.active .tab-ico i.ico,.tab.was .tab-txt b{animation:none}
+}
+@media (max-width:900px){
+  .sidebar .tabs .glider{background:#fff}
+}
+
+/* =========================================================
+   HEADER CORNERS: progress ring on the left, settings on the right
+   (outside the task bar, on the black header)
+   ========================================================= */
+.toolbar .tb-left{grid-column:1;grid-row:1;display:flex;align-items:center}
+.toolbar .brand{grid-column:2;grid-row:1}
+.toolbar .tools{grid-column:3;grid-row:1;justify-content:flex-end;padding-right:0}
+.toolbar .sb-prog{position:static;width:42px;height:42px;margin:0;padding:0;border-radius:50%;display:grid;place-items:center;box-shadow:none;flex:none;
+  background:radial-gradient(closest-side,var(--frame) calc(100% - 4px),transparent calc(100% - 3.5px)),conic-gradient(#fff calc(var(--p,0) * 1turn),#2a2d34 0)}
+.toolbar .sb-prog .track{display:none}
+.toolbar .sb-prog em{font-style:normal;font-size:12.5px;font-weight:800;color:#fff}
+#settingsBtn.corner-btn{position:static;width:42px;height:42px;background:var(--frame);color:#fff;box-shadow:inset 0 0 0 4px #2a2d34;z-index:auto}
+#settingsBtn.corner-btn:hover{background:#17191e;color:#fff}
+#settingsBtn.corner-btn svg{width:19px;height:19px}
+/* the task bar now only holds the tasks */
+.sidebar{padding-left:12px;padding-right:12px}
+@media (max-width:900px){
+  .toolbar .tb-left{display:flex}
+  .toolbar .sb-prog{width:38px;height:38px}
+  .toolbar .sb-prog em{font-size:11.5px}
+  #settingsBtn.corner-btn{width:38px;height:38px}
+}
+
+.sidebar{padding-left:28px;padding-right:28px}
+@media (max-width:900px){.sidebar{padding-left:12px;padding-right:12px}}
+
+/* =========================================================
+   PHONE: tasks become a slim black rail on the left (icons only).
+   Tap (or hover) and it opens to half the screen with the names.
+   ========================================================= */
+@media (max-width:900px){
+  .toolbar .sb-prog{display:grid}
+  .sidebar{position:fixed;left:0;top:var(--tb-h,58px);bottom:0;width:64px;margin:0;padding:14px 10px 16px;z-index:30;
+    display:flex;flex-direction:column;align-items:stretch;gap:8px;overflow:visible;
+    transition:width .45s cubic-bezier(.65,0,.35,1),box-shadow .45s var(--ease)}
+  .sidebar::before,.sidebar::after{display:none}
+  .bar-bg{border-radius:0 0 24px 0}
+  .sidebar.open{width:max(50vw,220px);box-shadow:0 0 0 100vmax rgba(8,9,12,.42)}
+  .sidebar > .tabs{flex-direction:column;justify-content:flex-start;overflow:visible;gap:10px;min-width:0}
+  .tab{flex:none;width:100%;height:44px;padding:5px;gap:12px;overflow:hidden;border-radius:999px}
+  .tab-ico{width:34px;height:34px}
+  .tab-txt,.tab .pct{opacity:0;white-space:nowrap;transition:opacity .2s var(--ease)}
+  .tab .pct{display:block;margin-left:auto;padding-right:10px}
+  .sidebar.open .tab-txt,.sidebar.open .tab .pct{opacity:1;transition:opacity .3s var(--ease) .18s}
+  .sidebar .tabs .glider{left:0;right:0;width:auto !important}
+  .app{margin-left:64px;border-radius:22px 0 0 0}
+}
+@media (max-width:900px){
+  .sidebar.open{width:max(56vw,250px)}
+  .tab-txt{flex:1;min-width:0;overflow:hidden}
+  .tab-txt b{display:block;overflow:hidden;text-overflow:ellipsis}
+  .tab .pct{flex:none;padding-left:8px}
+}
+
+/* Phone: smaller passage / question text so it fits on screen */
+@media (max-width:900px){
+  .read-passage{font-size:16px;line-height:1.65}
+  .q-text{font-size:18px;line-height:1.4}
+  .passage-card,.q-card{padding:18px 18px 20px}
+  .card-top{margin-bottom:12px}
+  .card-top .meta{font-size:12px}
+  .q-points li{font-size:14px;padding:10px 12px}
+}
+
+/* =========================================================
+   Desktop: progress ring and settings sit on the light page,
+   left and right of the task bar (black circles)
+   ========================================================= */
+@media (min-width:901px){
+  .sidebar,.sidebar{margin:0 100px}
+  .toolbar .sb-prog,#settingsBtn.corner-btn{position:fixed;top:76px;z-index:6;width:46px;height:46px;
+    box-shadow:0 10px 22px -12px rgba(0,0,0,.55)}
+  .toolbar .sb-prog{left:34px;background:radial-gradient(closest-side,var(--frame) calc(100% - 4px),transparent calc(100% - 3.5px)),conic-gradient(var(--accent) calc(var(--p,0) * 1turn),#2a2d34 0)}
+  #settingsBtn.corner-btn{right:34px;background:var(--frame)}
+  #settingsBtn.corner-btn:hover{background:#1c1f25}
+}
+
+/* =========================================================
+   NO SCROLLING: "type instead" lives in the recorder;
+   scoring notes live in the feedback pop-up
+   ========================================================= */
+#sRubricInfo{display:none}
+.recorder{padding-right:200px}
+.recorder .rec-action{right:104px}
+.type-btn{position:absolute;right:20px;top:50%;transform:translateY(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:3px;
+  width:58px;padding:8px 0 6px;border:0;border-radius:16px;background:#1d2026;color:#d5d8de;font:600 11px var(--font);cursor:pointer;transition:background .2s,color .2s}
+.type-btn:hover{background:#2a2e36;color:#fff}
+.type-btn svg{width:22px;height:22px}
+.type-modal{position:fixed;inset:0;z-index:45;display:grid;place-items:center;padding:24px;background:rgba(8,9,12,.55);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s .3s}
+.type-modal.show{opacity:1;visibility:visible;transition:opacity .3s var(--ease),visibility 0s}
+.type-card{width:min(620px,100%);background:var(--bg);border-radius:28px;padding:24px 28px 28px;box-shadow:0 40px 80px -20px rgba(0,0,0,.5);
+  transform:translateY(20px) scale(.98);transition:transform .45s var(--spring)}
+.type-modal.show .type-card{transform:none}
+.type-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.type-head h3{margin:2px 0 0;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.type-head .crumb{font-size:12.5px;font-weight:600;color:var(--tertiary)}
+.type-head .fb-close{position:static;width:38px;height:38px}
+.type-card label{display:block;margin-top:14px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.type-card textarea{min-height:130px;resize:vertical;margin-top:6px}
+.type-card input{margin-top:6px}
+.type-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+@media (max-width:900px){
+  .recorder{padding-right:150px}
+  .recorder .rec-action{right:76px}
+  .type-btn{right:12px;width:50px}
+  .type-btn span{display:none}
+  .type-btn{padding:10px 0}
+}
+.type-card textarea,.type-card input{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:12px 14px;border:0;border-radius:14px;background:var(--card);
+  box-shadow:inset 0 0 0 1.5px var(--line);font:500 15px/1.5 var(--font);color:var(--ink);outline:none;transition:box-shadow .2s}
+.type-card textarea:focus,.type-card input:focus{box-shadow:inset 0 0 0 2px var(--ink)}
+.type-card textarea{min-height:140px}
+
+/* =========================================================
+   FIT EVERY SCREEN — no page scrolling
+   Slim header, slim task bar, slim recorder. The work area is a
+   column that fills the space left; if the passage is ever too
+   long for a small screen, only the passage card scrolls.
+   ========================================================= */
+/* ---- slim header ---- */
+.toolbar{height:52px}
+.app-icon{width:30px;height:30px;border-radius:9px}
+.app-icon svg{width:16px;height:16px}
+.brand h1{font-size:16px}
+.brand small{font-size:11px;margin-top:1px}
+@media (min-width:901px){
+  .app{height:calc(100vh - 52px);height:calc(100dvh - 52px)}
+  .toolbar .sb-prog,#settingsBtn.corner-btn{top:60px;width:40px;height:40px}
+  .toolbar .sb-prog em{font-size:11.5px}
+}
+
+/* ---- slim task bar ---- */
+.sidebar{padding-top:6px;padding-bottom:8px}
+.tab{height:38px;padding:4px 14px 4px 4px;gap:9px}
+.tab-ico{width:30px;height:30px}
+.tab-ico i.ico{width:14px;height:14px}
+.tab-txt b{font-size:13.5px}
+
+/* ---- the work area is a column that fills the screen ---- */
+.pane.editor{display:flex;flex-direction:column;overflow:hidden}
+.pane.editor .pane-head{flex:none;padding:20px 40px 0}
+.pane-head .crumb{font-size:12px}
+.pane-head h2{font-size:26px}
+.fb-open{top:20px}
+.pane.editor .pane-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 40px 18px}
+.pane.editor .pane-body > * + *{margin-top:14px}
+#sPromptBox{flex:0 1 auto;min-height:0;display:flex;flex-direction:column}
+#sPromptBox > .passage-card,#sPromptBox > .q-card{flex:0 1 auto;min-height:0;overflow:auto;scrollbar-width:thin}
+#sPromptBox > * + *{margin-top:10px}
+.passage-card,.q-card{padding:20px 32px 24px}
+.card-top{margin-bottom:12px}
+.read-passage{font-size:clamp(16px,2.9vh,24px);line-height:1.7}
+.q-text{font-size:clamp(18px,3.1vh,26px)}
+.q-cover{margin-top:18px;padding-top:16px}
+.q-sub{margin-bottom:10px}
+.q-points li{padding:9px 12px;font-size:14px}
+.q-points .n{width:24px;height:24px;font-size:12px}
+.hint{font-size:13px}
+.live{flex:none;max-height:92px;overflow:auto;padding:10px 18px;font-size:15px}
+.live::before{margin-bottom:3px}
+
+/* ---- slim recorder, always at the bottom ---- */
+.pane.editor .pane-body > .recorder{flex:none;margin-top:auto;position:relative;bottom:auto}
+.pane.editor .pane-body > .live{margin-bottom:30px}
+.recorder{padding:8px 180px 8px 22px;gap:16px}
+.recorder .rec-label{font-size:11px}
+.recorder .timer{font-size:22px}
+.wave{height:28px}
+.recorder .rec-action{top:-20px;right:96px;gap:4px}
+.recbtn,.recbtn i{width:52px;height:52px}
+.recbtn i::after{width:22px;height:22px}
+.recorder .rec-key{font-size:10px;padding:1px 6px}
+.type-btn{width:auto;flex-direction:row;gap:6px;padding:8px 12px;border-radius:12px;right:14px}
+.type-btn svg{width:18px;height:18px}
+
+/* ---- short screens (small laptops) ---- */
+@media (max-height:780px){
+  .pane.editor .pane-head{padding-top:14px}
+  .pane-head .crumb{display:none}
+  .pane-head h2{font-size:22px}
+  .pane.editor .pane-body{padding-top:10px;padding-bottom:14px}
+  .pane.editor .pane-body > * + *{margin-top:10px}
+  .passage-card,.q-card{padding:16px 26px 18px}
+  .q-cover{margin-top:12px;padding-top:12px}
+  .hint{display:none}
+}
+
+/* ---- phones: same idea, no page scroll ---- */
+@media (max-width:900px){
+  body{overflow:hidden}
+  .app{height:calc(100vh - var(--tb-h,52px));height:calc(100dvh - var(--tb-h,52px));overflow:hidden}
+  .pane.editor{height:100%}
+  .pane.editor .pane-head{padding:12px 14px 0}
+  .pane-head .crumb{display:none}
+  .pane-head h2{font-size:20px}
+  .pane.editor .pane-body{padding:10px 12px 12px}
+  .pane.editor .pane-body > * + *{margin-top:10px}
+  .passage-card,.q-card{padding:14px 16px 16px}
+  .read-passage{font-size:clamp(15px,2.3vh,17px);line-height:1.6}
+  .q-text{font-size:17px}
+  .q-points{grid-template-columns:1fr 1fr;gap:6px}
+  .q-points li{padding:7px 9px;font-size:12.5px;gap:8px}
+  .q-points .n{width:20px;height:20px;font-size:11px}
+  .hint{display:none}
+  .live{max-height:70px;font-size:14px}
+  .recorder{padding:8px 140px 8px 16px}
+  .recorder .rec-action{right:66px;top:-18px}
+  .recbtn,.recbtn i{width:48px;height:48px}
+  .type-btn{padding:9px}
+  .type-btn span{display:none}
+}
+
+@media (min-width:901px){.sidebar{padding-left:40px;padding-right:40px}}
+
+/* =========================================================
+   COMPACT CENTRED RECORDER
+   A small black pill in the middle with the record button in
+   the centre notch: timer on the left, level + Type on the right
+   ========================================================= */
+.pane.editor .pane-body > .recorder{align-self:center;width:min(480px,100%)}
+.recorder{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 22px;min-height:60px;box-sizing:border-box}
+.recorder .rec-info{min-width:0;flex:none;max-width:calc(50% - 60px)}
+.recorder .rec-label{overflow:hidden;text-overflow:ellipsis}
+.recorder .rec-action{left:50%;right:auto;transform:translateX(-50%);top:-22px}
+.recorder .wave{width:86px;height:26px;margin-left:auto;flex:none}
+.recorder .type-btn{position:static;transform:none;flex:none}
+@media (max-width:900px){
+  .pane.editor .pane-body > .recorder{width:100%}
+  .recorder{padding:8px 10px 8px 16px;min-height:54px}
+  .recorder .rec-label{display:none}
+  .recorder .rec-action{top:-18px}
+  .recorder .wave{width:56px}
+}
+
+
+/* =========================================================
+   TEXT TOOL — writing layout (same design as the Speech tool)
+   Task + answer on the left, writing coach on the right;
+   everything fits the screen, panels scroll inside if needed.
+   ========================================================= */
+#out{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);column-gap:32px;align-items:start}
+#out > *{grid-column:2;margin-top:0;margin-bottom:20px}
+#out > .scorecard{grid-column:1;grid-row:1 / span 14;position:sticky;top:0}
+#out > .empty,#out > .skeleton{grid-column:1 / -1}
+#rubricInfo{display:none}
+.tab .pct:not(.on){display:none}
+.toolbar .engine{display:none !important}
+
+/* task + passage cards */
+.w-text{font-size:clamp(15px,2.3vh,19px);line-height:1.5;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.passage-text{font-size:clamp(14px,2vh,16.5px);line-height:1.65;color:var(--text)}
+#promptBox{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto;scrollbar-width:thin}
+#promptBox > *{flex:none}
+#promptBox .q-card,#promptBox .passage-card{padding:18px 26px 20px}
+#promptBox .prompt.custom label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:10px}
+#promptBox .prompt.custom textarea,#promptBox .prompt.custom input,.coach input{box-sizing:border-box}
+
+/* answer card: clean, no notebook lines */
+#writeView .paper-card{display:flex;flex-direction:column;min-height:0;margin:0;border-radius:28px;padding:18px 26px 16px;box-shadow:0 1px 0 rgba(16,24,40,.04),0 18px 40px -24px rgba(16,24,40,.25)}
+#writeView .paper-card .card-top{margin-bottom:10px}
+#writeView .paper-card:focus-within{box-shadow:0 0 0 2px var(--c,#6f9bff),0 18px 40px -24px rgba(16,24,40,.25)}
+#answer{flex:1;min-height:90px;resize:none;margin:0;background:none;font-size:clamp(15px,2.2vh,17px);line-height:1.7}
+.paper-foot{margin-top:10px}
+
+/* coach card */
+#writeView .coach{display:flex;flex-direction:column;min-height:0;margin:0;border-radius:28px;box-shadow:0 1px 0 rgba(16,24,40,.04),0 18px 40px -24px rgba(16,24,40,.25)}
+.coach-head{flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px 10px}
+.coach-head .coach-status{flex-basis:100%;font-size:12.5px}
+.coach-body{flex:1;min-height:0;overflow:auto;padding:0 20px 16px;scrollbar-width:thin}
+
+@media (min-width:901px){
+  #writeView .pane.editor .pane-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);grid-template-rows:minmax(0,auto) minmax(0,1fr);gap:14px 22px}
+  #writeView .pane.editor .pane-body > *{margin-top:0}
+  #promptBox{grid-column:1;grid-row:1;max-height:42vh}
+  #writeView .paper-card{grid-column:1;grid-row:2}
+  #writeView .coach{grid-column:2;grid-row:1 / span 2}
+}
+@media (max-height:780px){
+  #promptBox{max-height:36vh}
+  #promptBox .q-card,#promptBox .passage-card{padding:14px 22px 16px}
+  #writeView .paper-card{padding:14px 22px 12px}
+}
+@media (max-width:900px){
+  #writeView .pane.editor .pane-body{display:flex;flex-direction:column}
+  #writeView .pane.editor .pane-body > * + *{margin-top:10px}
+  #promptBox{flex:0 1 auto;max-height:30vh}
+  #promptBox .q-card,#promptBox .passage-card{padding:12px 14px 14px}
+  #writeView .paper-card{flex:1 1 auto;min-height:170px;padding:12px 14px 10px;border-radius:22px}
+  #writeView .coach{flex:0 1 auto;max-height:22vh;border-radius:22px}
+  .coach-head{padding:10px 14px 6px}
+  .coach-head .coach-status{display:none}
+  .coach-body{padding:0 14px 10px}
+  .paper-foot{gap:8px}
+  .wmeter{min-width:0}
+  .btns button{padding:9px 14px;font-size:13.5px}
+}
+
+/* keep the task bar's selected tab clear of the bar's rounded ends */
+@media (min-width:901px){.sidebar{padding-left:52px;padding-right:52px}}
+@media (max-width:900px){
+  .w-text{font-size:15px}
+  .passage-text{font-size:14px}
+  .paper-foot{flex-wrap:wrap}
+  .paper-foot .wmeter{flex-basis:100%}
+  .paper-foot .btns{margin-left:auto}
+  #answer{font-size:15px}
+}
