@@ -655,7 +655,18 @@ renderTabs(); renderPrompt(); updateCount(); coachLocal();
     setTimeout(() => $("fbClose").focus({preventScroll:true}), 60);
   };
   const close = () => { view.classList.remove("fb-on"); modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); };
+  // a short warning (e.g. "write a few sentences first") isn't feedback: show it as a note, keep the pop-up shut
+  const note = msg => {
+    let n = document.getElementById("inlineNote");
+    if (!n){ n = document.createElement("div"); n.id = "inlineNote"; n.className = "inline-note"; n.setAttribute("role","status"); document.body.appendChild(n); }
+    n.textContent = msg; n.classList.add("show"); clearTimeout(n._t); n._t = setTimeout(() => n.classList.remove("show"), 3800);
+  };
   function sync(){
+    if (out.children.length === 1 && out.firstElementChild.matches(".callout.warn")){
+      note(out.firstElementChild.textContent.trim());
+      out.innerHTML = `<div class="empty">Your feedback will appear here.</div>`;
+      return;
+    }
     const has = !isEmpty();
     view.classList.toggle("has-fb", has);
     if (has && !had) open();

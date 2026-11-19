@@ -1233,3 +1233,13 @@ audio{width:100%;height:42px}
 }
 
 @media (min-width:901px){#promptBox{max-height:calc(100vh - 300px);max-height:calc(100dvh - 300px)}}
+
+/* short warnings appear as a note above the bottom of the screen, not in the feedback pop-up */
+.inline-note{position:fixed;left:50%;bottom:28px;z-index:80;max-width:min(560px,calc(100vw - 32px));transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  padding:12px 20px;border-radius:999px;background:var(--ink);color:#fff;font-size:14px;font-weight:600;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);
+  transition:opacity .3s var(--ease),transform .4s var(--spring)}
+.inline-note::before{content:"!";display:inline-grid;place-items:center;width:20px;height:20px;margin-right:10px;border-radius:50%;background:var(--red-dot);font-size:12px;font-weight:800;vertical-align:-1px}
+.inline-note.show{opacity:1;transform:translate(-50%,0)}
+
+.inline-note{bottom:auto;top:128px;transform:translate(-50%,-16px)}
+.inline-note.show{transform:translate(-50%,0)}
