@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Write Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="splash-inner">
+    <div class="splash-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h9M4 12h6M4 17h9"/><path d="M17 8v8M20 10v4M14 10.5v3"/></svg></div>
+    <h2>Write</h2>
+    <p>Your practice space is getting ready</p>
+    <div class="dots"><i></i><i></i><i></i></div>
+  </div>
+</div>
+
+<header class="toolbar">
+  <div class="brand">
+    <div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h9M4 12h6M4 17h9"/><path d="M17 8v8M20 10v4M14 10.5v3"/></svg></div>
+    <h1>Feedback<small>Writing practice</small></h1>
+  </div>
+  <div class="tools">
+    <div class="engine" id="engine" title="Grammar engine"><i></i><span>Grammar: not checked</span></div>
+    <button class="icon-btn" id="settingsBtn" type="button" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+
+<main id="writeView" class="app">
+  <aside class="sidebar">
+    <div class="sb-head">Writing tasks</div>
+    <div class="sb-prog" id="wDone"><span class="track"><i></i></span><em>0 of 6 done</em></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="sb-foot">Rule-based scoring with LanguageTool grammar checks. No AI model is used.</div>
+  </aside>
+
+  <section class="pane editor card">
+    <div class="pane-head"><div class="crumb">Communication skills · Writing</div><h2 id="wTitle">Summary</h2></div>
+    <div class="pane-body">
+      <div id="promptBox"></div>
+      <div class="paper-card">
+        <div class="paper-label">Your answer</div>
+        <textarea id="answer" placeholder="Start writing…" spellcheck="false"></textarea>
+        <div class="paper-foot">
+          <div class="wmeter">
+            <div class="wprog" id="wprog"><b class="zone"></b><span></span></div>
+            <span class="count" id="count">0 words</span>
+          </div>
+          <div class="btns">
+            <button class="ghost" id="sampleBtn" type="button">Try a sample</button>
+            <button class="primary" id="evalBtn" type="button">Get feedback</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="coach">
+        <div class="coach-head">
+          <div><b>Writing coach</b><span class="coach-status" id="coachStatus">Start writing, and hints will appear here.</span></div>
+          <label class="switch"><input type="checkbox" id="autoCoach" checked> Live hints</label>
+        </div>
+        <div class="coach-body">
+          <div class="cl" id="checklist"></div>
+          <div id="sentences"></div>
+          <div class="coach-tone" id="coachTone"></div>
+        </div>
+      </div>
+      <div class="rubric" id="rubricInfo"></div>
+    </div>
+  </section>
+
+  <section class="pane inspector card">
+    <div class="pane-head"><h2>Feedback</h2><p>Four criteria, each out of 4.</p></div>
+    <div class="pane-body"><div id="out"><div class="empty">Your feedback will appear here.<br>Write an answer, then choose Get feedback.</div></div></div>
+  </section>
+</main>
+
+
+<div class="sheet-backdrop" id="settingsSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head"><h3 id="sheetTitle">Settings</h3><button class="link-btn" id="settingsDone" type="button">Done</button></div>
+    <div class="sheet-body">
+      <div class="sec">Grammar (written answers)</div>
+      <!-- Grammar server address: hidden from learners. To use your own LanguageTool server, change this value. -->
+      <input type="hidden" id="ltUrl" value="https://api.languagetool.org/v2/check">
+      <div class="form-group">
+        <label class="form-row"><span>English variety</span><select id="ltLang"><option value="en-GB" selected>British English (closest to Indian English)</option><option value="en-US">American English</option></select></label>
+      </div>
+      <p class="note">Grammar is checked online. If it can't be reached, the tool uses basic offline checks.</p>
+
+          </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script src="motion.js"></script>
+</body>
+</html>
