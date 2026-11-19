@@ -174,6 +174,8 @@ async function grammarCheck(text){
       let type = classify(m);
       // Likely a proper noun (Indian names/places): don't count capitalised unknown words mid-sentence
       if (type === "spelling" && /^[A-Z]/.test(span) && m.offset > 0 && !/[.!?]\s*$/.test(text.slice(0, m.offset).trimEnd().slice(-1) || ".")) type = "name";
+      // A word right after "my name is", "I am", "myself", "I'm from"… is a name or place, in any case (anmol / Anmol)
+      if (type === "spelling" && /\b(my name is|my name's|name is|i am|i'm|im|myself|this is|call me|called|i live in|i'm from|i am from|from)\s+$/i.test(text.slice(Math.max(0, m.offset - 24), m.offset))) type = "name";
       return {start:m.offset, end:m.offset+m.length, span, type,
         fix:(m.replacements||[]).slice(0,2).map(r=>r.value).filter(v=>v!==undefined),
         why:m.message || m.shortMessage || "", rule:(m.rule&&m.rule.id)||"", ruleName:(m.rule&&m.rule.description)||""};
